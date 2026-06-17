@@ -1,0 +1,162 @@
+/* ============================================================
+   RESET MÍNIMO
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ============================================================
+   LAYOUT BASE
+   ============================================================ */
+body {
+  font-family: sans-serif;
+  padding: 1rem;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+/* ============================================================
+   CONTROLES
+   ============================================================ */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+}
+
+/* ============================================================
+   MARCADORES
+   ============================================================ */
+.scoreboard {
+  display: flex;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.score-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.score-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.7;
+}
+
+.score-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* ============================================================
+   TABLERO
+   ============================================================ */
+.board {
+  display: grid;
+  /* Las columnas se calculan desde JS mediante una variable CSS */
+  grid-template-columns: repeat(var(--cols, 4), 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================================
+   CARTA
+   El truco de la perspectiva 3D: dos caras dentro de un
+   contenedor con preserve-3d; rotamos el contenedor entero.
+   ============================================================ */
+.card {
+  aspect-ratio: 3 / 4;
+  cursor: pointer;
+  perspective: 600px;  /* Da profundidad al efecto 3D */
+}
+
+.card-inner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;  /* Los hijos viven en el espacio 3D */
+  transition: transform 0.4s ease;
+}
+
+/* Cuando la carta tiene la clase .flipped, rotamos el inner */
+.card.flipped .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;   /* equivale a top/right/bottom/left: 0 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  border: 2px solid #333;
+  border-radius: 6px;
+  backface-visibility: hidden; /* Oculta la cara cuando está de espaldas */
+  user-select: none;
+}
+
+/* Cara trasera: visible por defecto */
+.card-back {
+  background-color: #4a4a8a;
+  color: white;
+}
+
+/* Cara delantera: empieza rotada 180° (de espaldas) */
+.card-front {
+  background-color: #f0f0f0;
+  transform: rotateY(180deg);
+}
+
+/* Carta encontrada: feedback visual diferente */
+.card.matched .card-front {
+  background-color: #c8f7c5;
+  border-color: #27ae60;
+  cursor: default;
+}
+
+/* ============================================================
+   ESTADO BLOQUEADO DEL TABLERO
+   Mientras se resuelve un par, el tablero no debe responder a clicks.
+   Esto lo manejamos con pointer-events, controlado desde JS.
+   ============================================================ */
+.board.locked {
+  pointer-events: none;
+}
+
+/* ============================================================
+   MENSAJE DE VICTORIA
+   ============================================================ */
+.victory-msg {
+  text-align: center;
+  padding: 1.5rem;
+  border: 2px solid #27ae60;
+  border-radius: 8px;
+  background-color: #eaffea;
+  margin-top: 1rem;
+}
+
+.victory-msg h2 {
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Clase utilitaria para ocultar elementos sin quitarlos del flujo de accesibilidad */
+.hidden {
+  display: none;
+}

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Juego de Memoria</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Juego de Memoria</h1>
+    </header>
+
+    <main>
+      <!-- Controles superiores: dificultad y botón de reinicio -->
+      <section class="controls" aria-label="Controles del juego">
+        <label for="difficulty-select">Dificultad:</label>
+        <select id="difficulty-select">
+          <option value="8">Fácil (8 parejas)</option>
+          <option value="12">Medio (12 parejas)</option>
+          <option value="18">Difícil (18 parejas)</option>
+        </select>
+        <button id="restart-btn" type="button">Reiniciar</button>
+      </section>
+
+      <!-- Marcadores: movimientos y tiempo -->
+      <section class="scoreboard" aria-label="Marcadores">
+        <div class="score-item">
+          <span class="score-label">Movimientos</span>
+          <span id="move-count" class="score-value">0</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Tiempo</span>
+          <span id="timer" class="score-value">0s</span>
+        </div>
+        <div class="score-item">
+          <span class="score-label">Mejor puntaje</span>
+          <span id="best-score" class="score-value">--</span>
+        </div>
+      </section>
+
+      <!-- Tablero: las cartas se generan aquí via JS -->
+      <section
+        id="board"
+        class="board"
+        role="grid"
+        aria-label="Tablero de cartas"
+      ></section>
+
+      <!-- Mensaje de victoria, oculto por defecto -->
+      <div id="victory-msg" class="victory-msg hidden" role="alert" aria-live="polite">
+        <h2>¡Ganaste! 🎉</h2>
+        <p id="victory-details"></p>
+      </div>
+    </main>
+
+    <!-- El script va al final para que el DOM ya exista cuando se ejecuta -->
+    <script src="script.js"></script>
+  </body>
+</html>
