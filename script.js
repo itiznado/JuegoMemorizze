@@ -8,9 +8,9 @@
 // Hay 18 símbolos para cubrir el nivel de dificultad máximo.
 // ------------------------------------------------------------
 const SYMBOLS = [
-  '🐶','🐱','🐭','🐹','🐰','🦊',
-  '🐻','🐼','🦁','🐮','🐷','🐸',
-  '🐵','🐔','🐧','🐦','🦆','🦉',
+  'Pares/Par1.jpg','Pares/Par2.jpg','Pares/Par3.jpg','Pares/Par4.jpg','Pares/Par5.jpg','Pares/Par6.jpg',
+  'Pares/Par7.jpg','Pares/Par8.jpg','Pares/Par9.jpg','Pares/Par10.jpg','Pares/Par11.jpg','Pares/Par12.jpg',
+  'Pares/Par13.jpg','Pares/Par14.jpg','Pares/Par15.jpg','Pares/Par16.jpg','Pares/Par17.jpg','Pares/Par18.jpg',
 ];
 
 // ------------------------------------------------------------
@@ -55,7 +55,9 @@ const victoryMsgEl   = document.getElementById('victory-msg');
 const victoryDetails = document.getElementById('victory-details');
 const restartBtn     = document.getElementById('restart-btn');
 const difficultyEl   = document.getElementById('difficulty-select');
-
+const soundMatch     = new Audio('Assets/ParEncontrado.mp3');
+const canvas = document.getElementById('confetti-canvas');
+const ctx = canvas.getContext('2d');
 // ------------------------------------------------------------
 // UTILIDADES
 // ------------------------------------------------------------
@@ -167,6 +169,36 @@ function flipCard(cardId) {
  */
 function resolveMatch() {
   const [id1, id2] = state.flipped;
+
+  // REPRODUCIR SONIDO
+  soundMatch.currentTime = 0;
+  soundMatch.play().catch(error => console.log(error));
+
+  // LANZAR CONFETI: Calculamos el centro de la pantalla para una explosión sutil
+  const cardEl1 = boardEl.querySelector(`.card[data-id="${id1}"]`);
+  const cardEl2 = boardEl.querySelector(`.card[data-id="${id2}"]`);
+
+  if (cardEl1 && cardEl2) {
+    // Obtener la posición y tamaño de la primera carta en la pantalla
+    const rect1 = cardEl1.getBoundingClientRect();
+    // Calcular su centro (X e Y con respecto a la ventana del navegador)
+    const x1 = rect1.left + rect1.width / 2;
+    const y1 = rect1.top + rect1.height / 2;
+
+    // Obtener la posición y tamaño de la segunda carta
+    const rect2 = cardEl2.getBoundingClientRect();
+    const x2 = rect2.left + rect2.width / 2;
+    const y2 = rect2.top + rect2.height / 2;
+
+    // Disparar una pequeña explosión en el centro de cada una
+    triggerConfetti(x1, y1);
+    triggerConfetti(x2, y2);
+  }
+
+  soundMatch.currentTime = 0;
+  soundMatch.play().catch((error) => {
+    console.log('No se pudo reproducir el sonido de pareja encontrada:', error);
+  });
 
   state.cards.find(c => c.id === id1).isMatched = true;
   state.cards.find(c => c.id === id2).isMatched = true;
@@ -308,7 +340,15 @@ function renderBoard() {
 
     const front = document.createElement('div');
     front.className = 'card-face card-front';
-    front.textContent = card.symbol;
+
+    const img = document.createElement('img');
+    img.src = card.symbol;
+    img.alt = `Imagen de Juego de Memoria`;
+    img.style.width = '100%';
+    img.style.height = '100%';
+    img.style.objectFit = 'cover';
+
+    front.appendChild(img);
 
     inner.appendChild(back);
     inner.appendChild(front);
@@ -347,6 +387,15 @@ function render() {
   renderBoard();
   renderScoreboard();
 }
+/**CONFETI*/
+function resizeCanvas() {
+  canvas.width = window.innerWidth
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+let particles = [];
 
 // ------------------------------------------------------------
 // CRONÓMETRO
@@ -416,6 +465,67 @@ function handleVictory() {
     victoryMsgEl.classList.remove('hidden');
   }, 600);
 }
+
+/**
+ * Crea una pequeña explosión de confeti en una posición x, y en la pantalla.
+ */
+function triggerConfetti(x, y) {
+  const colors = ['#ff5733', '#33ff57', '#3357ff', '#f3ff33', '#ff33f3', '#33fff0'];
+  
+  // Creamos solo 30 partículas para que no sea una explosión gigante
+  for (let i = 0; i < 90; i++) {
+    particles.push({
+      x: x,
+      y: y,
+      size: Math.random() * 6 + 4, // Tamaño entre 4px y 10px
+      color: colors[Math.floor(Math.random() * colors.length)],
+      // Velocidad y dirección (ángulo aleatorio en 360 grados)
+      speedX: (Math.random() - 0.5) * 8, 
+      speedY: (Math.random() - 0.5) * 8 - 3, // Ligera fuerza inicial hacia arriba
+      gravity: 0.2,
+      opacity: 1
+    });
+  }
+  
+  // Si es la primera partícula, iniciamos el bucle de animación
+  if (particles.length === 90) {
+    animateConfetti();
+  }
+}
+
+/**
+ * Bucle de animación encargado de dibujar y mover el confeti.
+ */
+function animateConfetti() {
+  if (particles.length === 0) {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    return;
+  }
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  particles.forEach((p, index) => {
+    p.x += p.speedX;
+    p.y += p.speedY;
+    p.speedY += p.gravity; // Aplica gravedad
+    p.opacity -= 0.015;    // Desvanecimiento gradual
+
+    // Dibujar el papelito (un rectángulo rotando ligeramente)
+    ctx.save();
+    ctx.globalAlpha = p.opacity;
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x, p.y, p.size, p.size);
+    ctx.restore();
+
+    // Eliminar partículas invisibles o fuera de la pantalla
+    if (p.opacity <= 0 || p.y > canvas.height) {
+      particles.splice(index, 1);
+    }
+  });
+
+  requestAnimationFrame(animateConfetti);
+}
+
 
 // ------------------------------------------------------------
 // MANEJADORES DE EVENTOS

@@ -80,7 +80,7 @@ header {
    contenedor con preserve-3d; rotamos el contenedor entero.
    ============================================================ */
 .card {
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 1 / 1;
   cursor: pointer;
   perspective: 600px;  /* Da profundidad al efecto 3D */
 }
@@ -90,7 +90,6 @@ header {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;  /* Los hijos viven en el espacio 3D */
-  transition: transform 0.4s ease;
 }
 
 /* Cuando la carta tiene la clase .flipped, rotamos el inner */
@@ -109,6 +108,7 @@ header {
   border-radius: 6px;
   backface-visibility: hidden; /* Oculta la cara cuando está de espaldas */
   user-select: none;
+  overflow: hidden;
 }
 
 /* Cara trasera: visible por defecto */
@@ -159,4 +159,14 @@ header {
 /* Clase utilitaria para ocultar elementos sin quitarlos del flujo de accesibilidad */
 .hidden {
   display: none;
+}
+
+#confetti-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none; /* El canvas no interfiere con los clicks */
+  z-index: 999; /* Asegura que el confetti esté por encima de todo */
 }
