@@ -1,5 +1,6 @@
 // ============================================================
-// JUEGO DE MEMORIA — Secciones 1 y 2: Estado + Render + Interacción
+// JUEGO DE MEMORIA — Secciones 1, 2 y 3
+// Estado + Render + Interacción + Cronómetro + Victoria
 // ============================================================
 
 // ------------------------------------------------------------
@@ -155,10 +156,17 @@ function flipCard(cardId) {
 
 /**
  * Marca ambas cartas del turno como encontradas (matched).
- * Incrementa el contador de parejas y desbloquea el tablero.
+ * Incrementa el contador de parejas, desbloquea el tablero
+ * y comprueba si el jugador ganó la partida.
+ *
+ * ¿Por qué la comprobación de victoria va aquí y no en render()?
+ * render() solo debe leer el estado y dibujarlo. Si pusieramos
+ * lógica de juego ahí, render() tendría efectos secundarios
+ * (detener el cronómetro, mostrar un mensaje) que serían difíciles
+ * de predecir y depurar. Las reglas del juego van en las mutaciones.
  */
 function resolveMatch() {
-  const [id1, id2] = state.flipped; // Destructuring: saca los dos IDs del array
+  const [id1, id2] = state.flipped;
 
   state.cards.find(c => c.id === id1).isMatched = true;
   state.cards.find(c => c.id === id2).isMatched = true;
@@ -168,6 +176,13 @@ function resolveMatch() {
   state.locked   = false;
 
   render();
+
+  // La victoria se comprueba DESPUÉS de render() para que el jugador
+  // vea la última pareja encontrada (con su color verde) antes de
+  // que aparezca el mensaje de victoria.
+  if (state.matchedPairs === state.totalPairs) {
+    handleVictory();
+  }
 }
 
 /**
@@ -214,9 +229,13 @@ function handleCardFlip(cardId) {
   // Ignorar si la carta ya está volteada o ya fue encontrada
   if (!card || card.isFlipped || card.isMatched) return;
 
-  // Primera carta del turno
+  // Primera carta del turno: también arrancamos el cronómetro.
+  // Lo arrancamos aquí (y no en initGame) para que el tiempo solo
+  // corra cuando el jugador ya tomó una decisión, no mientras mira
+  // el tablero. timerRunning evita que se inicie dos veces.
   if (state.flipped.length === 0) {
     flipCard(cardId);
+    startTimer();
     return;
   }
 
@@ -330,13 +349,72 @@ function render() {
 }
 
 // ------------------------------------------------------------
-// CRONÓMETRO (stub — se implementa en sección 3)
+// CRONÓMETRO
 // ------------------------------------------------------------
+
+// timerInterval guarda el ID que devuelve setInterval.
+// Necesitamos ese ID para poder cancelar el intervalo con clearInterval.
+// Vive fuera de las funciones porque tanto startTimer como stopTimer
+// necesitan leer y escribir el mismo valor.
 let timerInterval = null;
 
+/**
+ * Arranca el cronómetro si no está ya corriendo.
+ *
+ * setInterval(fn, 1000) ejecuta fn cada 1000ms (1 segundo) y devuelve
+ * un ID numérico. Lo guardamos en timerInterval para poder cancelarlo.
+ *
+ * Dentro de la función incrementamos timerSeconds en el estado y
+ * llamamos solo a renderScoreboard() (no a render() completo) porque
+ * no hay razón para reconstruir todo el tablero de cartas cada segundo.
+ */
+function startTimer() {
+  if (state.timerRunning) return; // Guardia: no iniciar si ya corre
+  state.timerRunning = true;
+
+  timerInterval = setInterval(() => {
+    state.timerSeconds += 1;
+    renderScoreboard(); // Solo actualiza los números, no el tablero
+  }, 1000);
+}
+
+/**
+ * Detiene el cronómetro.
+ * clearInterval con el ID guardado cancela el intervalo.
+ * Ponemos timerInterval en null como señal de "no hay intervalo activo".
+ */
 function stopTimer() {
   clearInterval(timerInterval);
   timerInterval = null;
+  state.timerRunning = false;
+}
+
+// ------------------------------------------------------------
+// VICTORIA
+// ------------------------------------------------------------
+
+/**
+ * Se llama cuando matchedPairs === totalPairs.
+ * Detiene el cronómetro y muestra el mensaje con los resultados.
+ *
+ * ¿Por qué mostramos el mensaje con un pequeño retardo (600ms)?
+ * Para que la animación de la última carta termine de voltear antes
+ * de que aparezca el overlay de victoria. Sin el retardo, el mensaje
+ * aparece mientras la carta todavía está girando, lo cual es abrupto.
+ *
+ * victoryDetails.textContent: modificamos directamente el texto
+ * del párrafo dentro del mensaje de victoria. No usamos innerHTML
+ * porque el contenido es solo texto, no HTML. textContent es más
+ * seguro y semánticamente correcto para texto plano.
+ */
+function handleVictory() {
+  stopTimer();
+
+  setTimeout(() => {
+    victoryDetails.textContent =
+      `Tiempo: ${state.timerSeconds}s · Movimientos: ${state.moves}`;
+    victoryMsgEl.classList.remove('hidden');
+  }, 600);
 }
 
 // ------------------------------------------------------------
