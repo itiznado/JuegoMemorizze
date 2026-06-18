@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Juego de Memoria — versión a auditar</title>
+<style>
+  body{font-family:system-ui,sans-serif;max-width:540px;margin:40px auto;padding:0 16px;color:#222}
+  h1{font-size:1.4rem}
+  .fila{display:flex;gap:8px;margin-bottom:16px}
+  input{flex:1;padding:8px 10px;font-size:1rem;border:1px solid #bbb;border-radius:6px}
+  button{padding:8px 12px;font-size:1rem;cursor:pointer;border:1px solid #888;border-radius:6px;background:#f3f3f3}
+  #tablero{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:8px}
+  .carta{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+    font-size:1.8rem;background:#2b3a42;color:#fff;border-radius:10px;cursor:pointer;user-select:none}
+  .carta.volteada{background:#e8eef0;color:#222}
+  .carta.encontrada{background:#cdebd7;color:#222;cursor:default}
+  #movimientos{color:#666;font-size:.9rem;margin-top:14px}
+  #mensaje{font-size:1.1rem;font-weight:600;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>Juego de Memoria</h1>
+
+<div class="fila">
+  <input id="nombre" placeholder="Tu nombre...">
+  <button id="iniciar">Iniciar / Reiniciar</button>
+</div>
+
+<div id="tablero"></div>
+<p id="movimientos"></p>
+<p id="mensaje"></p>
+
+<!--
+  ============================================================
+  CÓDIGO PARA AUDITAR (Parte 2)
+  Este juego de memoria "funciona", pero tiene bugs y malas prácticas.
+  Si juegas despacio parece correcto; pruébalo con clicks rápidos,
+  doble click sobre una misma carta, o un nombre raro.
+
+  Tu tarea: encontrar los problemas, corregirlos y explicar POR QUÉ
+  estaban mal. Comenta tus correcciones con  // BUG: ...  y  // FIX: ...
+  Debe haber, al menos:
+    - 1 bug funcional
+    - 1 problema de seguridad
+    - 1 olor de arquitectura / rendimiento
+  (En realidad hay más.)
+  ============================================================
+-->
+<script>
+  const EMOJIS = ['🍎', '🚀', '🐱', '🌵', '🎲', '🎧', '⚽', '🍕']; // 8 pares = 16 cartas
+
+  let cartas = [];      
+  let volteadas = [];   
+  let movimientos = 0;
+  let nombre = '';
+  let bloqueado = false; 
+
+  const tablero = document.getElementById('tablero');
+
+  // Algoritmo Fisher-Yates para una mezcla aleatoria uniforme y óptima
+  function barajar(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]];
+    }
+  }
+
+  document.getElementById('iniciar').addEventListener('click', function () {
+    nombre = document.getElementById('nombre').value.trim() || 'Jugador'; 
+    
+    cartas = [];
+    // // BUG PREVIO CORREGIDO: Ahora sí se insertan los dos elementos por par para completar las 16 cartas
+    EMOJIS.forEach(function (e) {
+      cartas.push({ emoji: e, encontrada: false, volteada: false });
+      cartas.push({ emoji: e, encontrada: false, volteada: false });
+    });
+    
+    barajar(cartas); 
+
+    volteadas = [];
+    movimientos = 0;
+    bloqueado = false;
+    document.getElementById('mensaje').textContent = '';
+    
+    inicializarTablero();
+    actualizarMarcador();
+  });
+
+  // Crea la estructura HTML limpia de 16 cartas boca abajo
+  function inicializarTablero() {
+    tablero.innerHTML = '';
+    for (let i = 0; i < cartas.length; i++) {
+      const div = document.createElement('div');
+      div.className = 'carta';
+      div.dataset.indice = i;
+      div.textContent = '?';
+      tablero.appendChild(div);
+    }
+  }
+
+  // Delegación de eventos para optimizar el rendimiento del DOM
+  tablero.addEventListener('click', function (e) {
+    const tarjetaHtml = e.target.closest('.carta');
+    if (tarjetaHtml) {
+      voltearCarta(tarjetaHtml);
+    }
+  });
+
+  function actualizarMarcador() {
+    document.getElementById('movimientos').textContent = 'Movimientos: ' + movimientos;
+  }
+
+  function voltearCarta(div) {
+    const i = Number(div.dataset.indice);
+
+    // Guardas tempranas para evitar clicks no deseados, spam y doble click
+    if (bloqueado) return;
+    if (cartas[i].encontrada || cartas[i].volteada) return; 
+    if (volteadas.length >= 2) return;
+
+    // Voltear visual y lógicamente la carta
+    div.textContent = cartas[i].emoji;
+    div.classList.add('volteada');
+    cartas[i].volteada = true;
+    volteadas.push(i);
+
+    if (volteadas.length === 2) {
+      movimientos++;
+      actualizarMarcador();
+
+      const a = volteadas[0];
+      const b = volteadas[1];
+      const divs = tablero.children;
+
+      // Comparación lógica precisa basada en el estado de las cartas
+      if (cartas[a].emoji === cartas[b].emoji) {
+        cartas[a].encontrada = true;
+        cartas[b].encontrada = true;
+        divs[a].classList.add('encontrada');
+        divs[b].classList.add('encontrada');
+        volteadas = [];
+        revisarVictoria();
+      } else {
+        bloqueado = true;
+        setTimeout(function () {
+          divs[a].textContent = '?';
+          divs[b].textContent = '?';
+          divs[a].classList.remove('volteada');
+          divs[b].classList.remove('volteada');
+          cartas[a].volteada = false;
+          cartas[b].volteada = false;
+          volteadas = [];
+          bloqueado = false; 
+        }, 800);
+      }
+    }
+  }
+
+  function revisarVictoria() {
+    const todasEncontradas = cartas.every(function (c) { return c.encontrada; });
+    if (todasEncontradas) {
+      // Prevención de ataques XSS usando textContent
+      const mensajeFinal = document.getElementById('mensaje');
+      mensajeFinal.textContent = '¡Ganaste, ' + nombre + '! 🎉';
+    }
+  }
+</script>
+</body>
+</html>
