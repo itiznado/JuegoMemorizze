@@ -12,3 +12,5 @@ Una cosa que mejorarías con más tiempo.
 
 Me gustaría agregar otras funciones como un tablero de los mejores tiempos a diferencia de un solo intento siendo seleccionado como el mejor. Este tablero con nombres para saber con quien compites y para dejar tu sello en tu intento.
 También quisiera agregar una forma de que las tarjetas giren al hacerles click, pero en 3D. No instantaneamente, sino que vea como se da vuelta una carta de verdad.
+
+https://itiznado.github.io/JuegoMemorizze/
