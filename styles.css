@@ -490,3 +490,53 @@ kbd {
     transform: scale(5.25); /* 1.5 veces más grande que el efecto anterior (3.5 * 1.5 = 5.25) */
   }
 }
+
+/* ============================================================
+   ESTILOS RESPONSIVE PARA TELÉFONOS (Nuevos)
+   ============================================================ */
+
+/* Para pantallas medianas (Tablets o teléfonos en horizontal) */
+@media (max-width: 600px) {
+  body {
+    margin: 20px auto;
+    padding: 0 12px;
+  }
+
+  h1 {
+    font-size: 1.2rem;
+    text-align: center;
+  }
+
+  /* Reducimos el tamaño del texto para que los emojis se vean completos */
+  .carta {
+    font-size: 1.5rem; 
+    border-radius: 8px; /* Bordes ligeramente más pequeños acorde al tamaño */
+  }
+  
+  #tablero {
+    gap: 8px; /* Menos separación para ganar espacio útil */
+  }
+}
+
+/* Para pantallas muy pequeñas (Teléfonos en vertical como iPhone SE) */
+@media (max-width: 380px) {
+  .fila {
+    flex-direction: column; /* El input y el botón se apilan uno abajo del otro */
+    gap: 10px;
+  }
+
+  input, button {
+    width: 100%; /* Ocupan todo el ancho de la pantalla */
+    box-sizing: border-box;
+  }
+
+  /* Si la dificultad es muy alta (muchas cartas), reducimos el mínimo del grid */
+  #tablero {
+    grid-template-columns: repeat(4, minmax(60px, 1fr));
+    gap: 6px;
+  }
+
+  .carta {
+    font-size: 1.3rem;
+  }
+}
