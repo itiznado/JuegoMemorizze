@@ -14,6 +14,34 @@
       <h1>Juego de Memoria</h1>
     </header>
 
+    <!-- Banner izquierdo: imágenes en loop vertical -->
+    <aside class="banner-left" aria-hidden="true">
+      <div class="banner-track">
+        <!-- Primer set de imágenes -->
+        <img src="Assets/bannerzazu/zazu1.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu2.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu3.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu4.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu5.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu6.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu7.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu8.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu9.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu10.jpg" alt="" />
+        <!-- Segundo set: copia exacta para el loop sin salto -->
+        <img src="Assets/bannerzazu/zazu1.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu2.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu3.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu4.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu5.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu6.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu7.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu8.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu9.jpg" alt="" />
+        <img src="Assets/bannerzazu/zazu10.jpg" alt="" />
+      </div>
+    </aside>
+
     <main class="layout">
 
       <!-- COLUMNA IZQUIERDA: solo el tablero -->
@@ -24,14 +52,7 @@
           role="grid"
           aria-label="Tablero de cartas"
         ></section>
-
-        <div id="victory-msg" class="victory-msg hidden" role="alert" aria-live="polite">
-          <h2>¡Ganaste! 🎉</h2>
-          <p id="victory-details"></p>
-          <button id="play-again-btn" type="button">Jugar de nuevo</button>
-        </div>
       </div>
-
       <!-- COLUMNA DERECHA: sidebar con todos los datos -->
       <aside class="sidebar">
         <div class="sidebar-inner">
@@ -67,8 +88,13 @@
             <button id="restart-btn" type="button">Reiniciar</button>
           </div>
 
-          <p class="keyboard-hint">Presiona <kbd>R</kbd> para reiniciar</p>
+          <div id="victory-msg" class="victory-msg hidden" role="alert" aria-live="polite">
+            <h2>¡Ganaste! 🎉</h2>
+            <p id="victory-details"></p>
+            <button id="play-again-btn" type="button">Jugar de nuevo</button>
+          </div>
 
+          <p class="keyboard-hint">Presiona <kbd>R</kbd> para reiniciar</p>
         </div>
       </aside>
 
