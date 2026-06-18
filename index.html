@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Juego de Memoria</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -11,47 +14,64 @@
       <h1>Juego de Memoria</h1>
     </header>
 
-    <main>
-      <!-- Controles superiores: dificultad y botón de reinicio -->
-      <section class="controls" aria-label="Controles del juego">
-        <label for="difficulty-select">Dificultad:</label>
-        <select id="difficulty-select">
-          <option value="8">Fácil (8 parejas)</option>
-          <option value="12">Medio (12 parejas)</option>
-          <option value="18">Difícil (18 parejas)</option>
-        </select>
-        <button id="restart-btn" type="button">Reiniciar</button>
-      </section>
+    <main class="layout">
 
-      <!-- Marcadores: movimientos y tiempo -->
-      <section class="scoreboard" aria-label="Marcadores">
-        <div class="score-item">
-          <span class="score-label">Movimientos</span>
-          <span id="move-count" class="score-value">0</span>
-        </div>
-        <div class="score-item">
-          <span class="score-label">Tiempo</span>
-          <span id="timer" class="score-value">0s</span>
-        </div>
-        <div class="score-item">
-          <span class="score-label">Mejor puntaje</span>
-          <span id="best-score" class="score-value">--</span>
-        </div>
-      </section>
+      <!-- COLUMNA IZQUIERDA: solo el tablero -->
+      <div class="board-area">
+        <section
+          id="board"
+          class="board"
+          role="grid"
+          aria-label="Tablero de cartas"
+        ></section>
 
-      <!-- Tablero: las cartas se generan aquí via JS -->
-      <section
-        id="board"
-        class="board"
-        role="grid"
-        aria-label="Tablero de cartas"
-      ></section>
-
-      <!-- Mensaje de victoria, oculto por defecto -->
-      <div id="victory-msg" class="victory-msg hidden" role="alert" aria-live="polite">
-        <h2>¡Ganaste! 🎉</h2>
-        <p id="victory-details"></p>
+        <div id="victory-msg" class="victory-msg hidden" role="alert" aria-live="polite">
+          <h2>¡Ganaste! 🎉</h2>
+          <p id="victory-details"></p>
+          <button id="play-again-btn" type="button">Jugar de nuevo</button>
+        </div>
       </div>
+
+      <!-- COLUMNA DERECHA: sidebar con todos los datos -->
+      <aside class="sidebar">
+        <div class="sidebar-inner">
+
+          <h2 class="sidebar-title">Memoria</h2>
+
+          <!-- Marcadores -->
+          <div class="stat-block">
+            <span class="stat-label">Tiempo</span>
+            <span id="timer" class="stat-value mono">0s</span>
+          </div>
+
+          <div class="stat-block">
+            <span class="stat-label">Movimientos</span>
+            <span id="move-count" class="stat-value mono">0</span>
+          </div>
+
+          <div class="stat-block">
+            <span class="stat-label">Mejor puntaje</span>
+            <span id="best-score" class="stat-value mono">--</span>
+          </div>
+
+          <hr class="sidebar-divider" />
+
+          <!-- Controles -->
+          <div class="sidebar-controls">
+            <label class="control-label" for="difficulty-select">Dificultad</label>
+            <select id="difficulty-select">
+              <option value="8">Fácil — 8 parejas</option>
+              <option value="12">Medio — 12 parejas</option>
+              <option value="18">Difícil — 18 parejas</option>
+            </select>
+            <button id="restart-btn" type="button">Reiniciar</button>
+          </div>
+
+          <p class="keyboard-hint">Presiona <kbd>R</kbd> para reiniciar</p>
+
+        </div>
+      </aside>
+
     </main>
 
     <canvas id="confetti-canvas"> </canvas>

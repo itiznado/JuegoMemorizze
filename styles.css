@@ -1,142 +1,304 @@
 /* ============================================================
+   TOKENS DE DISEÑO
+   Variables CSS centralizadas. Si quieres cambiar un color
+   o fuente en todo el sitio, solo cambias aquí.
+   ============================================================ */
+:root {
+  --color-cream:   #FFF6DE;
+  --color-teal:    #8BDFDD;
+  --color-coral:   #F48F68;
+  --color-yellow:  #FFE394;
+  --color-dark:    #2C2C3E;   /* Casi negro azulado, para texto y bordes */
+  --color-mid:     #5C5C7A;   /* Gris medio para labels y secundarios */
+  --color-card-bg: #3D3D5C;   /* Fondo de carta boca abajo */
+
+  --font-display: 'Nunito', sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  --radius-card:    10px;
+  --radius-ui:      8px;
+  --sidebar-width:  220px;
+  --transition-flip: 0.35s ease;
+}
+
+/* ============================================================
    RESET MÍNIMO
    ============================================================ */
-*,
-*::before,
-*::after {
+*, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
 /* ============================================================
-   LAYOUT BASE
+   BASE
    ============================================================ */
 body {
-  font-family: sans-serif;
-  padding: 1rem;
-  max-width: 900px;
-  margin: 0 auto;
+  font-family: var(--font-display);
+  background-color: var(--color-cream);
+  color: var(--color-dark);
+  min-height: 100vh;
+  padding: 1.25rem;
 }
 
 header {
   text-align: center;
-  margin-bottom: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+header h1 {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-dark);
 }
 
 /* ============================================================
-   CONTROLES
+   LAYOUT DE DOS COLUMNAS
+   El tablero crece para ocupar el espacio disponible.
+   El sidebar tiene un ancho fijo a la derecha.
    ============================================================ */
-.controls {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  flex-wrap: wrap;
-}
-
-/* ============================================================
-   MARCADORES
-   ============================================================ */
-.scoreboard {
-  display: flex;
+.layout {
+  display: grid;
+  grid-template-columns: 1fr var(--sidebar-width);
   gap: 1.5rem;
-  margin-bottom: 1.5rem;
-  flex-wrap: wrap;
-}
-
-.score-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.score-label {
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  opacity: 0.7;
-}
-
-.score-value {
-  font-size: 1.5rem;
-  font-weight: bold;
+  align-items: start;
 }
 
 /* ============================================================
    TABLERO
    ============================================================ */
+.board-area {
+  min-width: 0;
+  max-width: 900px;   /* Ajusta este valor a tu gusto */
+}
+
 .board {
   display: grid;
-  /* Las columnas se calculan desde JS mediante una variable CSS */
   grid-template-columns: repeat(var(--cols, 4), 1fr);
   gap: 0.5rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
+  left: 50%;
+  transform: translateX(50%);
 }
 
 /* ============================================================
    CARTA
-   El truco de la perspectiva 3D: dos caras dentro de un
-   contenedor con preserve-3d; rotamos el contenedor entero.
+   Firma visual: patrón de puntos en la cara trasera.
    ============================================================ */
 .card {
   aspect-ratio: 1 / 1;
   cursor: pointer;
-  perspective: 600px;  /* Da profundidad al efecto 3D */
+  perspective: 700px;
 }
 
 .card-inner {
   width: 100%;
   height: 100%;
   position: relative;
-  transform-style: preserve-3d;  /* Los hijos viven en el espacio 3D */
+  transform-style: preserve-3d;
+  transition: transform var(--transition-flip);
 }
 
-/* Cuando la carta tiene la clase .flipped, rotamos el inner */
 .card.flipped .card-inner {
   transform: rotateY(180deg);
 }
 
 .card-face {
   position: absolute;
-  inset: 0;   /* equivale a top/right/bottom/left: 0 */
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 2rem;
-  border: 2px solid #333;
-  border-radius: 6px;
-  backface-visibility: hidden; /* Oculta la cara cuando está de espaldas */
+  border-radius: var(--radius-card);
+  backface-visibility: hidden;
   user-select: none;
   overflow: hidden;
 }
 
-/* Cara trasera: visible por defecto */
+/* Cara trasera: patrón de puntos — la firma del diseño */
 .card-back {
-  background-color: #4a4a8a;
-  color: white;
+  background-color: var(--color-card-bg);
+  /* Patrón radial: puntos turquesa semitransparentes */
+  background-image: radial-gradient(
+    circle,
+    rgba(139, 223, 221, 0.35) 1.5px,
+    transparent 1.5px
+  );
+  background-size: 10px 10px;
+  border: 2px solid rgba(139, 223, 221, 0.25);
 }
 
-/* Cara delantera: empieza rotada 180° (de espaldas) */
+/* Cara delantera */
 .card-front {
-  background-color: #f0f0f0;
+  background-color: var(--color-yellow);
+  border: 2px solid var(--color-dark);
   transform: rotateY(180deg);
+  font-size: clamp(1.2rem, 4vw, 2.2rem); /* Escala con el tamaño del tablero */
 }
 
-/* Carta encontrada: feedback visual diferente */
+/* Carta encontrada */
 .card.matched .card-front {
-  background-color: #c8f7c5;
-  border-color: #27ae60;
+  background-color: var(--color-teal);
+  border-color: var(--color-dark);
   cursor: default;
+  opacity: 0.85;
+}
+
+/* Tablero bloqueado */
+.board.locked {
+  pointer-events: none;
 }
 
 /* ============================================================
-   ESTADO BLOQUEADO DEL TABLERO
-   Mientras se resuelve un par, el tablero no debe responder a clicks.
-   Esto lo manejamos con pointer-events, controlado desde JS.
+   SIDEBAR
    ============================================================ */
-.board.locked {
-  pointer-events: none;
+.sidebar {
+  position: sticky;    /* Se queda visible al hacer scroll */
+  top: 1.25rem;
+}
+
+.sidebar-inner {
+  background-color: var(--color-dark);
+  color: var(--color-cream);
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sidebar-title {
+  font-size: 1.1rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-teal);
+}
+
+/* Bloque de una estadística */
+.stat-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.stat-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-mid);  /* Gris: es información secundaria */
+  /* Nota: --color-mid sobre --color-dark da ratio ~3.5:1 (AA para texto pequeño en bold) */
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-cream);
+  line-height: 1;
+}
+
+/* Clase aplicada a los valores numéricos para usar la fuente monoespaciada */
+.mono {
+  font-family: var(--font-mono);
+}
+
+.sidebar-divider {
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   CONTROLES EN SIDEBAR
+   ============================================================ */
+.sidebar-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.control-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-mid);
+}
+
+select {
+  width: 100%;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-ui);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--color-cream);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: none; /* Quitamos el estilo nativo del sistema operativo */
+  /* Flecha personalizada con SVG inline en el background */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238BDFDD' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.6rem center;
+  padding-right: 2rem;
+}
+
+select:focus {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 2px;
+}
+
+/* Estilo de las opciones del select (limitado por el navegador) */
+select option {
+  background-color: var(--color-dark);
+  color: var(--color-cream);
+}
+
+button {
+  width: 100%;
+  padding: 0.6rem;
+  border: none;
+  border-radius: var(--radius-ui);
+  background-color: var(--color-coral);
+  color: white;
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+button:hover {
+  opacity: 0.88;
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-teal);
+  outline-offset: 3px;
+}
+
+/* Hint de teclado al pie del sidebar */
+.keyboard-hint {
+  font-size: 0.7rem;
+  color: var(--color-mid);
+  text-align: center;
+  margin-top: auto; /* Empuja hacia el fondo del sidebar */
+}
+
+kbd {
+  display: inline-block;
+  padding: 0.1em 0.4em;
+  border-radius: 4px;
+  border: 1px solid var(--color-mid);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  line-height: 1.4;
 }
 
 /* ============================================================
@@ -145,28 +307,102 @@ header {
 .victory-msg {
   text-align: center;
   padding: 1.5rem;
-  border: 2px solid #27ae60;
-  border-radius: 8px;
-  background-color: #eaffea;
-  margin-top: 1rem;
+  border-radius: 12px;
+  background-color: var(--color-teal);
+  border: 2px solid var(--color-dark);
+  margin-top: 0.5rem;
 }
 
 .victory-msg h2 {
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 0.4rem;
+  color: var(--color-dark);
 }
 
-/* Clase utilitaria para ocultar elementos sin quitarlos del flujo de accesibilidad */
-.hidden {
-  display: none;
+.victory-msg p {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-dark);
+  margin-bottom: 1rem;
 }
 
+/* El botón "Jugar de nuevo" dentro del mensaje de victoria
+   necesita sobreescribir el width:100% del botón base para
+   que no ocupe todo el ancho del mensaje */
+.victory-msg button {
+  width: auto;
+  padding: 0.6rem 1.5rem;
+  background-color: var(--color-dark);
+}
+
+/* ============================================================
+   RESPONSIVE: en móvil el sidebar pasa a ser barra superior
+   ============================================================ */
+@media (max-width: 600px) {
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+  }
+
+  /* El sidebar se mueve encima del tablero */
+  .sidebar {
+    order: -1;
+    position: static;
+  }
+
+  .sidebar-inner {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding: 1rem;
+    border-radius: 12px;
+    align-items: center;
+  }
+
+  .sidebar-title {
+    width: 100%;
+    font-size: 0.85rem;
+  }
+
+  .stat-block {
+    flex: 1;
+    min-width: 70px;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+
+  .sidebar-divider {
+    width: 100%;
+  }
+
+  .sidebar-controls {
+    width: 100%;
+  }
+
+  .keyboard-hint {
+    display: none; /* En móvil no hay teclado */
+  }
+}
+
+/* ============================================================
+   CONFETTI CANVAS (sin cambios funcionales)
+   ============================================================ */
 #confetti-canvas {
   position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  pointer-events: none; /* El canvas no interfiere con los clicks */
-  z-index: 999; /* Asegura que el confetti esté por encima de todo */
+  pointer-events: none;
+  z-index: 999;
+}
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+.hidden {
+  display: none;
 }

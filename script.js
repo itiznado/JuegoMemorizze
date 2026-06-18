@@ -1,6 +1,7 @@
 // ============================================================
 // JUEGO DE MEMORIA — Secciones 1, 2 y 3
 // Estado + Render + Interacción + Cronómetro + Victoria
+// + Dificultad + Teclado + Mejor puntaje (localStorage)
 // ============================================================
 
 // ------------------------------------------------------------
@@ -130,6 +131,8 @@ function initGame(pairCount) {
   state.totalPairs   = pairCount;
   state.timerSeconds = 0;
   state.timerRunning = false;
+
+  state.bestScore = loadBestScore(pairCount); // Carga el mejor puntaje para esta dificultad
 
   victoryMsgEl.classList.add('hidden');
 
@@ -288,11 +291,11 @@ function handleCardFlip(cardId) {
     // PAREJA ENCONTRADA: no necesitamos retardo, resolvemos directo.
     // Un pequeño timeout de 400ms da tiempo a que la animación de
     // volteo termine antes de cambiar el color a "matched".
-    setTimeout(resolveMatch, 400);
+    setTimeout(resolveMatch, 200);
   } else {
     // NO COINCIDEN: esperamos 1 segundo para que el usuario vea
     // ambas cartas antes de ocultarlas de nuevo.
-    setTimeout(resolveMismatch, 1000);
+    setTimeout(resolveMismatch, 600);
   }
 }
 
@@ -316,8 +319,26 @@ function handleCardFlip(cardId) {
 function renderBoard() {
   boardEl.replaceChildren();
 
+  // DESPUÉS
   const cols = COLS_BY_PAIR_COUNT[state.totalPairs] ?? 4;
+  const rows = Math.ceil(state.cards.length / cols);
+
+  // Espacio disponible en pantalla
+  const boardArea   = boardEl.closest('.board-area');
+  const availW      = boardArea.clientWidth;
+  const availH      = window.innerHeight - 130; // resta header + padding
+  const gap         = 8;
+
+  // Tamaño máximo de carta que cabe por ancho
+  const sizeByWidth  = Math.floor((availW  - gap * (cols - 1)) / cols);
+  // Tamaño máximo de carta que cabe por alto
+  const sizeByHeight = Math.floor((availH  - gap * (rows - 1)) / rows);
+
+  // Usamos el menor para que quepa en ambas dimensiones
+  const cardSize = Math.min(sizeByWidth, sizeByHeight);
+
   boardEl.style.setProperty('--cols', cols);
+  boardEl.style.setProperty('--card-size', `${cardSize}px`);
 
   state.cards.forEach((card) => {
     const article = document.createElement('article');
@@ -458,13 +479,90 @@ function stopTimer() {
  */
 function handleVictory() {
   stopTimer();
-
+ 
+  // Intentamos guardar el puntaje. saveBestScore compara con el
+  // anterior y solo escribe en localStorage si es una mejora.
+  // Lo hacemos antes del setTimeout para que el marcador
+  // "Mejor puntaje" ya muestre el nuevo valor cuando aparezca
+  // el mensaje de victoria.
+  saveBestScore(state.totalPairs, state.moves, state.timerSeconds);
+ 
   setTimeout(() => {
+    // Leemos state.bestScore después de guardarlo; si hubo mejora
+    // ya estará actualizado con el valor nuevo.
+    const isNewBest = (
+      state.bestScore.moves   === state.moves &&
+      state.bestScore.seconds === state.timerSeconds
+    );
+ 
     victoryDetails.textContent =
-      `Tiempo: ${state.timerSeconds}s · Movimientos: ${state.moves}`;
+      `Tiempo: ${state.timerSeconds}s · Movimientos: ${state.moves}` +
+      (isNewBest ? ' 🏆 ¡Nuevo récord!' : '');
+ 
     victoryMsgEl.classList.remove('hidden');
   }, 600);
 }
+
+// ------------------------------------------------------------
+// PERSISTENCIA: localStorage
+// ------------------------------------------------------------
+ 
+/**
+ * Construye la clave de localStorage para un nivel de dificultad.
+ * Ejemplo: buildKey(8) → 'bestScore_8'
+ *
+ * Usar claves distintas por dificultad evita comparar puntajes
+ * de partidas con diferente cantidad de cartas, lo cual no tendría
+ * sentido (ganar en difícil siempre lleva más movimientos).
+ */
+function buildKey(pairCount) {
+  return `bestScore_${pairCount}`;
+}
+ 
+/**
+ * Lee el mejor puntaje guardado para una dificultad concreta.
+ *
+ * localStorage.getItem devuelve null si la clave no existe todavía
+ * (primera vez que se juega ese nivel). En ese caso retornamos null
+ * y el marcador mostrará '--'.
+ *
+ * JSON.parse convierte el string guardado de vuelta a objeto.
+ * Ejemplo: '{"moves":12,"seconds":45}' → { moves: 12, seconds: 45 }
+ */
+function loadBestScore(pairCount) {
+  const raw = localStorage.getItem(buildKey(pairCount));
+  return raw ? JSON.parse(raw) : null;
+}
+ 
+/**
+ * Guarda el puntaje actual si es mejor que el guardado.
+ *
+ * Criterio: menos movimientos gana. En empate de movimientos,
+ * menos tiempo gana. Si no hay puntaje previo, cualquier resultado
+ * es automáticamente el mejor.
+ *
+ * JSON.stringify convierte el objeto a texto para poder guardarlo.
+ * localStorage solo acepta strings, no objetos JavaScript.
+ * Ejemplo: { moves: 12, seconds: 45 } → '{"moves":12,"seconds":45}'
+ *
+ * Después de guardar, actualizamos state.bestScore para que
+ * renderScoreboard() lo muestre sin necesidad de volver a leer
+ * desde localStorage.
+ */
+function saveBestScore(pairCount, moves, seconds) {
+  const prev = loadBestScore(pairCount);
+ 
+  const isBetter = !prev
+    || moves < prev.moves
+    || (moves === prev.moves && seconds < prev.seconds);
+ 
+  if (!isBetter) return;
+ 
+  const newBest = { moves, seconds };
+  localStorage.setItem(buildKey(pairCount), JSON.stringify(newBest));
+  state.bestScore = newBest; // Sincronizamos el estado en memoria
+}
+
 
 /**
  * Crea una pequeña explosión de confeti en una posición x, y en la pantalla.
@@ -577,6 +675,46 @@ boardEl.addEventListener('click', (event) => {
  */
 restartBtn.addEventListener('click', () => {
   initGame(Number(difficultyEl.value));
+});
+const playAgainBtn = document.getElementById('play-again-btn');
+playAgainBtn.addEventListener('click', () => {
+  initGame(Number(difficultyEl.value));
+});
+
+/**
+ * Listener del selector de dificultad (evento: change).
+ *
+ * ¿Por qué 'change' y no 'click'?
+ * 'click' se dispara al abrir el menú desplegable también.
+ * 'change' solo se dispara cuando el valor efectivamente cambia,
+ * que es exactamente lo que necesitamos: reiniciar el juego solo
+ * cuando el usuario elige una opción diferente.
+ *
+ * event.target.value devuelve el valor de la opción seleccionada
+ * como string ('8', '12' o '18'); Number() lo convierte a número.
+ */
+difficultyEl.addEventListener('change', (event) => {
+  initGame(Number(event.target.value));
+});
+ 
+/**
+ * Listener de teclado global (evento: keydown).
+ *
+ * Se registra en document (no en un elemento específico) para
+ * capturar teclas sin importar qué elemento tenga el foco.
+ *
+ * event.key contiene el nombre legible de la tecla presionada.
+ * Usamos toLowerCase() para que funcione igual con 'r' y 'R'.
+ *
+ * ¿Por qué 'keydown' y no 'keyup' o 'keypress'?
+ * 'keydown' responde en cuanto se presiona la tecla, sin esperar
+ * a que se suelte. 'keypress' está obsoleto. 'keyup' introduce
+ * un pequeño retraso perceptible que se siente menos responsivo.
+ */
+document.addEventListener('keydown', (event) => {
+  if (event.key.toLowerCase() === 'r') {
+    initGame(Number(difficultyEl.value));
+  }
 });
 
 // ------------------------------------------------------------
