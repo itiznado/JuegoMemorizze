@@ -74,6 +74,7 @@ header h1 {
 .board-area {
   min-width: 0;
   max-width: 900px;   /* Ajusta este valor a tu gusto */
+  position: relative; /* Para posicionar el overlay de victoria */
 }
 
 .board {
@@ -407,7 +408,7 @@ kbd {
    UTILIDADES
    ============================================================ */
 .hidden {
-  display: none;
+  display: none !important;
 }
 
 /* ============================================================
@@ -448,4 +449,44 @@ kbd {
 @keyframes banner-scroll {
   0%   { transform: translateY(0); }
   100% { transform: translateY(-50%); }
+}
+
+/* ============================================================
+   OVERLAY DE VICTORIA (Velocidad Constante ×5.25)
+   ============================================================ */
+.victory-overlay {
+  position: fixed;        
+  top: 0;
+  left: 0;
+  width: 100vw;           
+  height: 100vh;          
+  display: flex;          
+  align-items: center;    
+  justify-content: center;
+  z-index: 1000;          
+  pointer-events: none;   
+  overflow: hidden;       /* Oculta los bordes de la imagen cuando supera la pantalla */
+}
+
+.victory-overlay img {
+  width: 250px;           /* Base inicial */
+  height: 250px;
+  object-fit: cover;      
+  opacity: 0;
+  /* 'linear' asegura que mantenga exactamente la misma velocidad de principio a fin */
+  animation: victory-grow-linear 3s linear forwards;
+}
+
+@keyframes victory-grow-linear {
+  0% {
+    opacity: 0;
+    transform: scale(0);  /* Empieza en el centro exacto */
+  }
+  10% {
+    opacity: 1;           /* Se vuelve completamente visible al inicio */
+  }
+  100% {
+    opacity: 1;
+    transform: scale(5.25); /* 1.5 veces más grande que el efecto anterior (3.5 * 1.5 = 5.25) */
+  }
 }

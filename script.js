@@ -57,8 +57,11 @@ const victoryDetails = document.getElementById('victory-details');
 const restartBtn     = document.getElementById('restart-btn');
 const difficultyEl   = document.getElementById('difficulty-select');
 const soundMatch     = new Audio('Assets/ParEncontrado.mp3');
+const soundSupremeVictory = new Audio('Assets/VICTORYSOUND.mp3');
 const canvas = document.getElementById('confetti-canvas');
 const ctx = canvas.getContext('2d');
+const victoryOverlayEl = document.getElementById('victory-overlay');
+const victoryImgEl     = document.getElementById('victory-img');
 // ------------------------------------------------------------
 // UTILIDADES
 // ------------------------------------------------------------
@@ -135,6 +138,13 @@ function initGame(pairCount) {
   state.bestScore = loadBestScore(pairCount); // Carga el mejor puntaje para esta dificultad
 
   victoryMsgEl.classList.add('hidden');
+  victoryOverlayEl.classList.add('hidden');
+  victoryImgEl.style.animation = 'none';
+  void victoryImgEl.offsetWidth; // Fuerza reflow para reiniciar la animación CSS
+  victoryImgEl.style.animation  = '';
+
+  soundSupremeVictory.pause();
+  soundSupremeVictory.currentTime = 0;
 
   render();
 }
@@ -479,28 +489,47 @@ function stopTimer() {
  */
 function handleVictory() {
   stopTimer();
- 
-  // Intentamos guardar el puntaje. saveBestScore compara con el
-  // anterior y solo escribe en localStorage si es una mejora.
-  // Lo hacemos antes del setTimeout para que el marcador
-  // "Mejor puntaje" ya muestre el nuevo valor cuando aparezca
-  // el mensaje de victoria.
   saveBestScore(state.totalPairs, state.moves, state.timerSeconds);
- 
+
+  // Sonido de victoria suprema
+  soundSupremeVictory.play();
+
+  // Mostrar imagen que crece sobre el tablero
+  victoryOverlayEl.classList.remove('hidden');
+
+  // Confeti cayendo desde los bordes izquierdo y derecho.
+  // Lanzamos ráfagas cada 300ms durante 3 segundos (10 ráfagas).
+  // Cada ráfaga dispara desde puntos aleatorios en X=0 (izquierdo)
+  // y X=window.innerWidth (derecho), en alturas aleatorias.
+  let rafagas = 0;
+  const confettiInterval = setInterval(() => {
+    // Borde izquierdo: X cerca de 0, Y aleatoria en la mitad superior
+    triggerConfetti(
+      Math.random() * 60,                          // X: primeros 60px del borde izquierdo
+      Math.random() * window.innerHeight * 0.6     // Y: aleatoria en 60% superior
+    );
+    // Borde derecho: X cerca del ancho total
+    triggerConfetti(
+      window.innerWidth - Math.random() * 60,      // X: últimos 60px del borde derecho
+      Math.random() * window.innerHeight * 0.6
+    );
+
+    rafagas += 1;
+    if (rafagas >= 10) clearInterval(confettiInterval); // Para después de 10 ráfagas
+  }, 300);
+
+  // El mensaje del sidebar aparece después de que la imagen
+  // termina de crecer (3 segundos)
   setTimeout(() => {
-    // Leemos state.bestScore después de guardarlo; si hubo mejora
-    // ya estará actualizado con el valor nuevo.
     const isNewBest = (
       state.bestScore.moves   === state.moves &&
       state.bestScore.seconds === state.timerSeconds
     );
- 
     victoryDetails.textContent =
       `Tiempo: ${state.timerSeconds}s · Movimientos: ${state.moves}` +
       (isNewBest ? ' 🏆 ¡Nuevo récord!' : '');
- 
     victoryMsgEl.classList.remove('hidden');
-  }, 600);
+  }, 3000);
 }
 
 // ------------------------------------------------------------
